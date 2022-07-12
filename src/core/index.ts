@@ -23,11 +23,11 @@ export class Polynomial {
     this.polynomialA1 = this.randomNumber()
   }
 
-  private randomNumber() {
+  public randomNumber() {
     return BigNumber.from(utils.randomBytes(32))
   }
 
-  private findY(x: BigNumber) {
+  public findY(x: BigNumber) {
     return this.polynomialS.add(x.mul(this.polynomialA1))
   }
 
@@ -45,12 +45,19 @@ export class Polynomial {
     return shares
   }
 
-  private reconstructPrivateKey(share1: Share, share2: Share) {
-    return share1.y
+  public reconstructPrivateKey(share1: Share, share2: Share) {
+    const privateKey = share1.y
       .mul(share2.x)
       .div(share2.x.sub(share1.x))
       .add(share2.y.mul(share1.x).div(share1.x.sub(share2.x)))
       .mod(moduloP)
+    const wallet = new ethers.Wallet(privateKey.toString())
+    this.publicAddress = wallet.address
+    if (this.polynomialS !== privateKey) {
+      this.mnemonic = null
+      this.polynomialS = privateKey
+    }
+    return privateKey
   }
 
   public test() {
